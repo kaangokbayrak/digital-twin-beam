@@ -125,15 +125,13 @@ class StateSpace:
         print(f"Sensor at DOF:   {self.sensor_dof}")
         
         # Check controllability
-        from scipy.linalg import matrix_rank
-        
         # Controllability matrix (simplified rank check for large systems)
         # Full controllability matrix is expensive for large n
         # Check rank of [B, AB, A^2B, ...]
         controllability_rank = 0
         ctrl_mat = self.B.copy()
         for i in range(min(self.n_states, 5)):  # Check first few
-            controllability_rank = matrix_rank(ctrl_mat)
+            controllability_rank = np.linalg.matrix_rank(ctrl_mat)
             if i < 4:
                 ctrl_mat = np.hstack([ctrl_mat, np.linalg.matrix_power(self.A, i+1) @ self.B])
         

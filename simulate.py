@@ -80,11 +80,8 @@ def simulate_lqr(A, B, K_lqr, x0, t_span, t_eval, C_out):
     u : ndarray
         Control history
     """
-    u_history = []
-    
     def dynamics(t, x):
         u = -K_lqr @ x
-        u_history.append(u.copy())
         return A @ x + B @ u
     
     sol = solve_ivp(dynamics, t_span, x0, t_eval=t_eval, method='RK45', rtol=1e-8)
@@ -92,14 +89,16 @@ def simulate_lqr(A, B, K_lqr, x0, t_span, t_eval, C_out):
     t = sol.t
     x = sol.y.T
     y = (C_out @ x.T).T
-    u = np.array(u_history)
+    
+    # Compute control for each time point
+    u = np.array([-K_lqr @ x[i] for i in range(len(t))])
     
     return t, x, y, u
 
 
 def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
     """
-    Simulate LQG control with noisy measurements using fixed-step RK4.
+    Simulate LQG control with noisy measurements using fixed-step implicit method.
     
     Parameters
     ----------
@@ -151,9 +150,29 @@ def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
     x_hist[0] = x0
     x_hat_hist[0] = lqg.kalman.x_hat
     
-    # RK4 integration
+    # Precompute matrix for implicit Euler: (I - dt*A)
+    I_mat = np.eye(n_states)
+    implicit_mat = I_mat - dt * A
+    
+    try:
+        implicit_mat_inv = np.linalg.inv(implicit_mat)
+    except:
+        # Fallback to pseudo-inverse if singular
+        implicit_mat_inv = np.linalg.pinv(implicit_mat)
+    
+    # Integration loop with smaller dt and implicit method
     for i in range(n_steps - 1):
         x = x_hist[i]
+        
+        # Check for numerical issues
+        if np.any(np.isnan(x)) or np.any(np.isinf(x)) or np.max(np.abs(x)) > 1e10:
+            print(f"Warning: Numerical instability detected at step {i}, t={t[i]:.4f}s")
+            # Fill remaining with last good value
+            x_hist[i+1:] = x_hist[i]
+            x_hat_hist[i+1:] = x_hat_hist[i]
+            y_hist[i:] = y_hist[i-1] if i > 0 else 0
+            u_hist[i:] = u_hist[i-1] if i > 0 else 0
+            break
         
         # Measure output with noise
         y_true = (C_out @ x).item()
@@ -162,22 +181,20 @@ def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
         
         # LQG step: compute control and update observer
         u, x_hat = lqg.step(np.array([y_meas]), dt)
-        u_hist[i] = u.item()
+        u_val = u.item()
+        
+        # Saturate control to prevent instability
+        u_val = np.clip(u_val, -1000, 1000)  # Saturate at ±1000 N
+        u_hist[i] = u_val
         x_hat_hist[i] = x_hat
         
-        # RK4 integration for true state
-        def f(x_state, u_input):
-            return A @ x_state + B @ u_input
-        
-        k1 = f(x, u)
-        k2 = f(x + 0.5*dt*k1, u)
-        k3 = f(x + 0.5*dt*k2, u)
-        k4 = f(x + dt*k3, u)
-        
-        x_hist[i+1] = x + (dt/6) * (k1 + 2*k2 + 2*k3 + k4)
+        # Backward (implicit) Euler: x_{n+1} = x_n + dt * f(x_{n+1})
+        # Rearranging: x_{n+1} = (I - dt*A)^{-1} * (x_n + dt*B*u_n)
+        x_hist[i+1] = implicit_mat_inv @ (x + dt * (B @ np.array([[u_val]])).flatten())
     
     # Final measurement
-    y_hist[-1] = (C_out @ x_hist[-1]).item()
+    if not (np.any(np.isnan(x_hist[-1])) or np.any(np.isinf(x_hist[-1]))):
+        y_hist[-1] = (C_out @ x_hist[-1]).item()
     u_hist[-1] = u_hist[-2]  # Hold last control
     x_hat_hist[-1] = x_hat_hist[-2]
     
