@@ -156,7 +156,7 @@ def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
     
     try:
         implicit_mat_inv = np.linalg.inv(implicit_mat)
-    except:
+    except np.linalg.LinAlgError:
         # Fallback to pseudo-inverse if singular
         implicit_mat_inv = np.linalg.pinv(implicit_mat)
     

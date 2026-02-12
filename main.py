@@ -194,8 +194,8 @@ def main():
     
     # Scenario 3: LQG control with noise
     print("  Simulating LQG control with measurement noise...")
-    noise_std = 1e-3  # Measurement noise std dev (m) - adjusted to match Rn
-    dt_lqg = 0.001  # Back to smaller time step with implicit method
+    noise_std = 1e-3  # Measurement noise std dev (m) - matches Rn covariance
+    dt_lqg = 0.001  # Small time step with implicit Euler for stiff system
     t_lqg, x_lqg, x_hat_lqg, y_lqg, u_lqg = simulate_lqg(
         A, B, C, lqg, x0, (0, T_sim), dt_lqg, noise_std=noise_std
     )

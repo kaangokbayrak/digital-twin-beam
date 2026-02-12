@@ -124,15 +124,15 @@ class StateSpace:
         print(f"\nActuator at DOF: {self.actuator_dof}")
         print(f"Sensor at DOF:   {self.sensor_dof}")
         
-        # Check controllability
-        # Controllability matrix (simplified rank check for large systems)
-        # Full controllability matrix is expensive for large n
-        # Check rank of [B, AB, A^2B, ...]
+        # Check controllability (simplified for large systems)
+        # Full controllability matrix is computationally expensive for large n
+        # Check rank of [B, AB, A^2B, ...] for first few powers
+        MAX_CONTROLLABILITY_ITERATIONS = 5
         controllability_rank = 0
         ctrl_mat = self.B.copy()
-        for i in range(min(self.n_states, 5)):  # Check first few
+        for i in range(min(self.n_states, MAX_CONTROLLABILITY_ITERATIONS)):
             controllability_rank = np.linalg.matrix_rank(ctrl_mat)
-            if i < 4:
+            if i < MAX_CONTROLLABILITY_ITERATIONS - 1:
                 ctrl_mat = np.hstack([ctrl_mat, np.linalg.matrix_power(self.A, i+1) @ self.B])
         
         print(f"\nControllability rank (approx): {controllability_rank} / {self.n_states}")

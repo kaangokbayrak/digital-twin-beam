@@ -240,8 +240,8 @@ Performance: **~85% faster settling** with active control!
 - R = 1.0 (unit control effort cost)
 
 **Kalman Filter**:
-- Process noise: Q_n = 10^-2 × I
-- Measurement noise: R_n = 10^-6
+- Process noise: Q_n = 10^-4 × I
+- Measurement noise: R_n = 10^-2
 
 **Damping**:
 - Rayleigh damping with ζ₁ = ζ₂ = 0.01 (1% on first two modes)
