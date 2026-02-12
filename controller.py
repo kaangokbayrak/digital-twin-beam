@@ -169,7 +169,7 @@ class KalmanFilter:
         """
         Update state estimate using measurement.
         
-        Uses Euler integration: x_hat(t+dt) = x_hat(t) + dt * x_hat_dot
+        Uses RK4 integration for numerical stability.
         
         Parameters
         ----------
@@ -185,13 +185,18 @@ class KalmanFilter:
         x_hat : ndarray
             Updated state estimate
         """
-        # Observer dynamics: x_hat_dot = A*x_hat + B*u + L*(y - C*x_hat)
-        y_pred = self.C @ self.x_hat
-        innovation = y - y_pred
-        x_hat_dot = self.A @ self.x_hat + self.B @ u + self.L @ innovation
+        # Observer dynamics function: x_hat_dot = A*x_hat + B*u + L*(y - C*x_hat)
+        def observer_dynamics(x_hat_):
+            y_pred = self.C @ x_hat_
+            innovation = y - y_pred
+            return self.A @ x_hat_ + self.B @ u + self.L @ innovation
         
-        # Euler integration
-        self.x_hat = self.x_hat + dt * x_hat_dot
+        # RK4 integration for numerical stability with large gains
+        k1 = observer_dynamics(self.x_hat)
+        k2 = observer_dynamics(self.x_hat + 0.5 * dt * k1)
+        k3 = observer_dynamics(self.x_hat + 0.5 * dt * k2)
+        k4 = observer_dynamics(self.x_hat + dt * k3)
+        self.x_hat = self.x_hat + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
         
         return self.x_hat.copy()
     
