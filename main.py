@@ -131,9 +131,9 @@ def main():
     
     noise_std = 1e-4  # 1% of typical tip displacement (~10mm range)
     Rn = np.array([[noise_std**2]])  # Rn = variance = noise_std^2
-    Qn = 1e-8 * np.eye(A.shape[0])  # Process noise covariance - smaller for stability  
+    Qn = 1e-3 * np.eye(A.shape[0])  # Process noise covariance - smaller for stability  
     
-    print(f"Process noise covariance:     Qn = 1e-8 × I")
+    print(f"Process noise covariance:     Qn = 1e-3 × I")
     print(f"Measurement noise variance:   Rn = {noise_std**2:.2e} (noise_std = {noise_std:.2e})")
     
     kalman = KalmanFilter(A, B, C, Qn=Qn, Rn=Rn)

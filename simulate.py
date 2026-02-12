@@ -291,9 +291,11 @@ def plot_transient_comparison(t_free, y_free, t_lqr, y_lqr, u_lqr,
     # Subplot 3: Energy decay (log scale)
     ax = axes[2]
     # Energy proportional to displacement squared
-    energy_free = y_free**2
-    energy_lqr = y_lqr**2
-    energy_lqg = y_lqg**2
+    # Add small floor to prevent log(0) or log(negative) errors
+    eps = 1e-30
+    energy_free = np.maximum(y_free**2, eps)
+    energy_lqr = np.maximum(y_lqr**2, eps)
+    energy_lqg = np.maximum(y_lqg**2, eps)
     
     ax.semilogy(t_free, energy_free / energy_free[0], 'k-', linewidth=2, 
                 label='Free vibration', alpha=0.7)
