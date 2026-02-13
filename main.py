@@ -194,7 +194,7 @@ def main():
     
     # Scenario 3: LQG control with noise
     print("  Simulating LQG control with measurement noise...")
-    noise_std = 1e-3  # Measurement noise std dev (m) - matches Rn covariance order
+    noise_std = 1e-3  # Measurement noise std dev (m) - Rn=1e-2 deliberately larger for robustness
     dt_lqg = 0.001  # Time step for LQG simulation
     t_lqg, x_lqg, x_hat_lqg, y_lqg, u_lqg = simulate_lqg(
         A, B, C, lqg, x0, (0, T_sim), dt_lqg, noise_std=noise_std
