@@ -129,11 +129,12 @@ def main():
     print("STEP 7: KALMAN FILTER DESIGN")
     print("="*60)
     
-    Qn = 1e-4 * np.eye(A.shape[0])  # Process noise
-    Rn = np.array([[1e-2]])          # Measurement noise  
-    
-    print(f"Process noise covariance:     Qn = 1e-4 × I")
-    print(f"Measurement noise covariance: Rn = 1e-2")
+    noise_std = 1e-3  # Measurement noise standard deviation (m)
+    Qn = 1e-6 * np.eye(A.shape[0])  # Process noise covariance
+    Rn = np.array([[1e-2]])  # Measurement noise variance
+
+    print(f"Process noise covariance:     Qn = 1e-6 × I")
+    print(f"Measurement noise variance:   Rn = {Rn[0,0]:.2e}")
     
     kalman = KalmanFilter(A, B, C, Qn=Qn, Rn=Rn)
     kalman.print_summary()
@@ -194,8 +195,7 @@ def main():
     
     # Scenario 3: LQG control with noise
     print("  Simulating LQG control with measurement noise...")
-    noise_std = 1e-3  # Measurement noise std dev (m) - Rn=1e-2 deliberately larger for robustness
-    dt_lqg = 0.001  # Time step for LQG simulation
+    dt_lqg = 1e-5  # Smaller time step required for stiff observer dynamics
     t_lqg, x_lqg, x_hat_lqg, y_lqg, u_lqg = simulate_lqg(
         A, B, C, lqg, x0, (0, T_sim), dt_lqg, noise_std=noise_std
     )

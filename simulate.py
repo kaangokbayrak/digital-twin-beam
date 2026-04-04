@@ -99,7 +99,7 @@ def simulate_lqr(A, B, K_lqr, x0, t_span, t_eval, C_out):
 def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
     """
     Simulate LQG control with noisy measurements using fixed-step RK4 method.
-    
+
     Parameters
     ----------
     A : ndarray
@@ -118,7 +118,7 @@ def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
         Fixed time step
     noise_std : float
         Measurement noise standard deviation
-    
+
     Returns
     -------
     t : ndarray
@@ -132,8 +132,8 @@ def simulate_lqg(A, B, C_out, lqg, x0, t_span, dt, noise_std=0.0):
     u : ndarray
         Control history
     """
-    # Reset LQG controller
-    lqg.reset()
+    # Reset LQG controller with correct initial state estimate
+    lqg.reset(x0)
     
     # Time array
     t = np.arange(t_span[0], t_span[1], dt)

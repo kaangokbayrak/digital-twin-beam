@@ -1,0 +1,189 @@
+/home/runner/work/digital-twin-beam/digital-twin-beam/controller.py:192: RuntimeWarning: overflow encountered in matmul
+  return self.A @ x_hat_ + self.B @ u + self.L @ innovation
+/home/runner/work/digital-twin-beam/digital-twin-beam/controller.py:192: RuntimeWarning: invalid value encountered in matmul
+  return self.A @ x_hat_ + self.B @ u + self.L @ innovation
+/home/runner/work/digital-twin-beam/digital-twin-beam/simulate.py:170: RuntimeWarning: overflow encountered in matmul
+  return A @ x_ + (B * u_val).flatten()
+/home/runner/work/digital-twin-beam/digital-twin-beam/simulate.py:170: RuntimeWarning: invalid value encountered in matmul
+  return A @ x_ + (B * u_val).flatten()
+/home/runner/work/digital-twin-beam/digital-twin-beam/controller.py:190: RuntimeWarning: invalid value encountered in matmul
+  y_pred = self.C @ x_hat_
+/home/runner/work/digital-twin-beam/digital-twin-beam/simulate.py:298: RuntimeWarning: overflow encountered in square
+  energy_lqg = np.maximum(y_lqg**2, eps)
+/home/runner/.local/lib/python3.12/site-packages/matplotlib/scale.py:270: RuntimeWarning: overflow encountered in power
+  return np.power(self.base, values)
+/home/runner/work/digital-twin-beam/digital-twin-beam/main.py:274: RuntimeWarning: overflow encountered in square
+  print(f"  LQG: {np.sqrt(np.mean(u_lqg**2)):.3f} N")
+============================================================
+DIGITAL TWIN: ACTIVE VIBRATION CONTROL OF CANTILEVER BEAM
+============================================================
+
+============================================================
+STEP 1: BEAM GEOMETRY AND MATERIAL PROPERTIES
+============================================================
+Length:           L = 1.0 m
+Young's modulus:  E = 2.10e+11 Pa
+Density:          ρ = 7850 kg/m³
+Width:            b = 0.03 m
+Height:           h = 0.005 m
+Cross-section:    A = 1.50e-04 m²
+Moment of inertia: I = 3.13e-10 m⁴
+Number of elements: 10
+
+============================================================
+STEP 2: FINITE ELEMENT MODEL
+============================================================
+Number of nodes:           11
+Total DOFs:                22
+Free DOFs (after BC):      20
+Element length:            0.1 m
+
+============================================================
+STEP 3: MODAL ANALYSIS
+============================================================
+
+Natural Frequencies (first 5 modes):
+------------------------------------------------------------
+Mode   FEM (Hz)     Analytical (Hz)    Error (%) 
+------------------------------------------------------------
+1      4.1776       4.1776             0.001     
+2      26.1813      26.1806            0.003     
+3      73.3247      73.3069            0.024     
+4      143.7875     143.6496           0.096     
+5      238.0634     237.4658           0.252     
+
+============================================================
+STEP 4: VISUALIZE MODE SHAPES
+============================================================
+Saved mode shapes to mode_shapes.png
+
+============================================================
+STEP 5: STATE-SPACE CONVERSION
+============================================================
+
+============================================================
+STATE-SPACE MODEL SUMMARY
+============================================================
+Number of states:     40
+Number of inputs:     1
+Number of outputs:    1
+
+Rayleigh damping:
+  alpha = 4.527316e-01 (mass proportional)
+  beta  = 1.048489e-04 (stiffness proportional)
+  Target zeta1 = 0.0100
+  Target zeta2 = 0.0100
+
+Actuator at DOF: 18
+Sensor at DOF:   18
+
+Controllability rank (approx): 3 / 40
+  System may not be fully controllable
+============================================================
+
+============================================================
+STEP 6: LQR CONTROLLER DESIGN
+============================================================
+Q weight (output-based): C^T C × 1e8
+R weight: 1.0
+
+============================================================
+LQR CONTROLLER SUMMARY
+============================================================
+Gain matrix shape: (1, 40)
+Gain norm: 7.325837e+03
+
+Closed-loop eigenvalues (real part):
+  Max: -1.146338e+01
+  Min: -1.994921e+05
+  ✓ All eigenvalues stable (negative real parts)
+============================================================
+
+============================================================
+STEP 7: KALMAN FILTER DESIGN
+============================================================
+Process noise covariance:     Qn = 1e-8 × I
+Measurement noise variance:   Rn = 1.00e-08 (noise_std = 1.00e-04)
+
+============================================================
+KALMAN FILTER SUMMARY
+============================================================
+Gain matrix shape: (40, 1)
+Gain norm: 1.007641e+01
+
+Observer eigenvalues (real part):
+  Max: -3.991084e-01
+  Min: -1.994921e+05
+  ✓ All eigenvalues stable (negative real parts)
+============================================================
+
+============================================================
+STEP 8: LQG CONTROLLER
+============================================================
+LQG controller assembled using separation principle
+
+============================================================
+STEP 9: INITIAL CONDITION
+============================================================
+Applied tip force: 10.0 N
+Static tip deflection: 50.794 mm
+Initial state dimension: 40
+
+============================================================
+STEP 10: SIMULATE VIBRATION CONTROL
+============================================================
+Simulation time: 2.0 s
+Time step: 0.001 s
+Number of time steps: 2000
+
+  Simulating free vibration...
+  Simulating LQR control...
+  Simulating LQG control with measurement noise...
+
+============================================================
+STEP 11: GENERATE PLOTS
+============================================================
+Saved transient comparison to transient_response.png
+
+============================================================
+STEP 12: GENERATE ANIMATIONS
+============================================================
+  Creating free vibration animation...
+Saved animation to beam_free.gif
+  Creating LQR control animation...
+Saved animation to beam_lqr.gif
+  Creating LQG control animation...
+Saved animation to beam_lqg.gif
+
+============================================================
+STEP 13: PERFORMANCE METRICS
+============================================================
+
+Settling Time (2% criterion):
+  Free vibration: 1.999 s
+  LQR control:    0.187 s
+  LQG control:    0.039 s
+
+Peak Control Forces:
+  LQR: 498.035 N
+  LQG: nan N
+
+RMS Control Effort:
+  LQR: 17.383 N
+  LQG: nan N
+
+============================================================
+SIMULATION COMPLETE
+============================================================
+
+Generated files:
+  - mode_shapes.png           (Modal analysis)
+  - transient_response.png    (Comparison plots)
+  - beam_free.gif             (Free vibration animation)
+  - beam_lqr.gif              (LQR control animation)
+  - beam_lqg.gif              (LQG control animation)
+
+Performance Summary:
+  Vibration suppression: 90.6% faster
+  LQR vs LQG settling:   LQR=0.187s, LQG=0.039s
+============================================================
