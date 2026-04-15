@@ -1,8 +1,17 @@
 # Theory Manual: Active Vibration Control of Cantilever Beams
 
+> **Audience**: Undergraduate engineering students (dynamics, vibrations, or controls courses).
+> Each section starts with an intuitive explanation before introducing the math.
+
+---
+
 ## 1. Euler-Bernoulli Beam Theory
 
 ### 1.1 Governing Equation
+
+**Intuition**: When you push down on the free end of a cantilever beam and release it, why does it vibrate? The beam stores energy in two ways: bending stiffness resists deformation (like a spring), and mass resists acceleration (like inertia). The balance between these two produces oscillation.
+
+The **Euler-Bernoulli beam model** assumes that cross-sections remain planar and perpendicular to the neutral axis during bending (true for slender beams where length >> thickness). This gives a 4th-order PDE:
 
 The transverse vibration of a slender beam is governed by the Euler-Bernoulli partial differential equation:
 
@@ -25,6 +34,8 @@ EI\frac{\partial^4 w}{\partial x^4} + \rho A \frac{\partial^2 w}{\partial t^2} =
 $$
 
 ### 1.2 Hermite Shape Functions
+
+**Intuition**: We need to approximate the beam's curved shape using polynomials. A cubic polynomial has 4 coefficients, which we match to 2 DOFs at each end of the element (displacement $w$ and rotation $\theta$). This gives a smooth curve that automatically satisfies continuity at element boundaries.
 
 The beam element uses cubic Hermite polynomials to interpolate displacement and rotation. For an element of length $L_e$, the normalized coordinate $\xi = x/L_e \in [0,1]$ gives four shape functions:
 
@@ -55,6 +66,8 @@ $$
 
 ### 1.3 Element Stiffness Matrix
 
+**Intuition**: The stiffness matrix tells you how much force/moment is needed at each node to produce unit displacement/rotation at any other node. It is derived from the beam's strain energy — the energy stored when the beam bends.
+
 The element stiffness matrix is derived from the strain energy:
 
 $$
@@ -73,6 +86,8 @@ $$
 $$
 
 ### 1.4 Element Consistent Mass Matrix
+
+**Intuition**: The mass matrix tells you how forces at each node relate to accelerations elsewhere. Using the same shape functions for mass as for stiffness gives the "consistent" formulation, which is more accurate than lumping mass at nodes. The factor 1/420 comes from integrating products of cubic shape functions.
 
 The kinetic energy of the element is:
 
@@ -94,6 +109,8 @@ $$
 ## 2. Global Assembly
 
 ### 2.1 Scatter-Add Algorithm
+
+**Intuition**: Each element "knows" about 4 local DOFs (displacement and rotation at its two nodes). The assembly step maps these into the correct positions in the global matrix — like a jigsaw puzzle where adjacent elements share nodes.
 
 For $n$ elements with $n+1$ nodes, the global system has $2(n+1)$ degrees of freedom (2 per node: translation $w$ and rotation $\theta$).
 
@@ -153,6 +170,8 @@ $$
 
 ### 4.1 Generalized Eigenvalue Problem
 
+**Intuition**: Every structure has natural frequencies at which it vibrates freely. At these frequencies, all parts of the structure move in a fixed pattern (the mode shape) and at the same frequency. Finding these frequencies is critical because a controller must damp them all.
+
 Free vibration (no damping, no forcing) leads to:
 
 $$
@@ -208,6 +227,10 @@ For higher modes $(n \geq 4)$: $\beta_n L \approx (2n-1)\pi/2$
 
 ### 5.1 Second-Order to First-Order Form
 
+**Intuition**: Control theory tools (LQR, Kalman) work on first-order ODE systems $\dot{\mathbf{x}} = \mathbf{A}\mathbf{x} + \mathbf{B}u$. But our FEM gives a second-order system ($\mathbf{M}\ddot{\mathbf{q}} + \ldots$). The trick is simple: define a new "state vector" that stacks both positions and velocities. Then Newton's law becomes a first-order equation in this bigger state.
+
+For 20 physical DOFs: we get a **40-state** system (20 positions + 20 velocities).
+
 The damped equation of motion is:
 
 $$
@@ -247,6 +270,8 @@ $$
 $$
 
 ### 5.2 Rayleigh Damping
+
+**Intuition**: Real beams lose energy due to internal friction. Rayleigh damping is the simplest model: damping is a linear combination of mass and stiffness matrices. The mass term damps low frequencies; the stiffness term damps high frequencies. We tune $\alpha$ and $\beta$ to set exactly 1% damping on the first two modes.
 
 Rayleigh (proportional) damping provides a simple model:
 
@@ -289,6 +314,12 @@ $$
 
 ### 6.1 Optimal Control Problem
 
+**Intuition**: We want to push the beam back to zero quickly (small $\mathbf{x}$) without burning out the actuator (small $u$). LQR frames this as a trade-off: minimise a weighted sum of vibration energy and control effort over all future time. The answer turns out to be a simple linear feedback $u = -\mathbf{K}\mathbf{x}$, and the optimal gain matrix $\mathbf{K}$ can be computed offline.
+
+The matrices $\mathbf{Q}$ and $R$ are design choices:
+- Larger $\mathbf{Q}$ → heavier penalty on vibration → more aggressive control, faster settling
+- Larger $R$ → heavier penalty on actuator force → gentler control, slower settling
+
 Minimize the quadratic cost functional:
 
 $$
@@ -302,6 +333,8 @@ where:
 - $\mathbf{R} > 0$ = control weighting matrix (positive definite)
 
 ### 6.2 Continuous-Time Algebraic Riccati Equation (CARE)
+
+**Intuition**: The CARE is the key equation that LQR solves. It finds the matrix $\mathbf{P}$ that represents the "cost-to-go" from any state — the minimum future cost if you always act optimally. The optimal gain is then $\mathbf{K} = R^{-1}\mathbf{B}^T\mathbf{P}$. You solve this once (offline), then just multiply $\mathbf{K}\mathbf{x}$ in real-time.
 
 The optimal control law is:
 
@@ -348,6 +381,10 @@ The LQR solution guarantees:
 
 ### 7.1 State Estimation Problem
 
+**Intuition**: LQR requires the full 40-state vector $\mathbf{x}$, but in practice you only have one noisy sensor (tip displacement). The Kalman filter runs a parallel simulation of the beam in software, continuously correcting its estimate using the sensor measurement. The correction gain $\mathbf{L}$ is chosen to minimise estimation error.
+
+Think of it as: "My model says the beam should be here, but my sensor says it's slightly different — I'll update my estimate by blending the two, weighted by how much I trust each."
+
 Given noisy measurements:
 
 $$
@@ -384,6 +421,8 @@ $$
 
 ### 7.3 Duality with LQR
 
+**Intuition**: The Kalman filter problem is mathematically identical to the LQR problem, just with matrices transposed. This means we can use the same CARE solver — just swap $\mathbf{A} \to \mathbf{A}^T$ and $\mathbf{B} \to \mathbf{C}^T$.
+
 The filter problem is the **dual** of the LQR problem:
 - $\mathbf{A} \leftrightarrow \mathbf{A}^T$
 - $\mathbf{B} \leftrightarrow \mathbf{C}^T$
@@ -395,6 +434,8 @@ This allows solving the filter CARE using standard CARE solvers.
 ## 8. Linear Quadratic Gaussian (LQG) Compensator
 
 ### 8.1 Separation Principle
+
+**Intuition**: The separation principle is one of the most powerful results in control theory. It says you can design the regulator (LQR) and the observer (Kalman) completely independently, then plug them together and the combined system is still stable and optimal. This makes the design problem tractable — a 40-state system would be extremely hard to design as a whole, but splitting it into two 40-state problems solved independently is feasible.
 
 The LQG controller combines:
 1. **Regulator**: $\mathbf{u} = -\mathbf{K}\hat{\mathbf{x}}$ (LQR gain using estimated state)
@@ -443,6 +484,8 @@ The eigenvalues are the union of:
 
 ### 8.4 Performance Considerations
 
+**Intuition**: LQR has nice robustness guarantees (it can tolerate gain errors of up to 50% or phase errors of up to 60°). LQG loses these guarantees because the observer introduces additional dynamics. However, in practice LQG works very well, especially when the noise model is accurate.
+
 Unlike LQR, LQG does **not** guarantee:
 - Gain/phase margins
 - Robustness to model uncertainty
@@ -454,6 +497,8 @@ However, it is optimal for:
 ## 9. Implementation Notes
 
 ### 9.1 Numerical Considerations
+
+**Stiff dynamics**: The Kalman filter observer has very fast poles (eigenvalues with large negative real parts, up to ~$-2\times10^5$). This means the observer dynamics are much faster than the beam dynamics. Such "stiff" systems require small time steps — we use $\Delta t = 10^{-5}$ s for the LQG simulation (vs. $10^{-3}$ s for the free/LQR simulations). RK4 integration is used throughout for numerical accuracy.
 
 **Matrix inversion**: Compute $\mathbf{M}^{-1}$ once and reuse:
 ```python

@@ -1170,13 +1170,8 @@ def generate_html_report(figure_files, metrics, filename='report.html'):
     for caption, info in encoded.items():
         if info is None:
             continue
-        if info['is_gif']:
-            # Reference by relative path instead of embedding (keeps HTML small)
-            import os
-            rel_path = os.path.basename(info['path'])
-            img_tag  = f'<img src="{rel_path}" alt="{caption}" loading="lazy">'
-        else:
-            img_tag = f'<img src="{info["src"]}" alt="{caption}" loading="lazy">'
+        # Embed all media (PNG and GIF) as base64 for a fully self-contained report
+        img_tag = f'<img src="{info["src"]}" alt="{caption}" loading="lazy">'
         figure_cards.append(
             f'<div class="card">\n{img_tag}\n'
             f'<p class="caption">{caption}</p>\n</div>'
