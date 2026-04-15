@@ -25,6 +25,8 @@ wheels/
 *.gif
 *.mp4
 *.avi
+*.html
+!docs/*.html
 
 # IDE
 .vscode/
