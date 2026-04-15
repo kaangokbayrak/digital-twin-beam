@@ -674,10 +674,10 @@ def plot_pole_zero(A, B, K_lqr, filename='pole_zero.png'):
     ax.legend()
 
     # Limit x-axis to show movement clearly
-    all_real = np.concatenate([np.real(poles_ol), np.real(poles_cl)])
-    mask_im  = (np.abs(np.imag(poles_ol)) <= freq_limit)
-    x_lo = min(np.real(poles_cl[mask_im]).min() * 1.15, -1)
-    x_hi = max(np.real(poles_ol[mask_im]).max() * 0.5,   1)
+    mask_im_ol = (np.abs(np.imag(poles_ol)) <= freq_limit)
+    mask_im_cl = (np.abs(np.imag(poles_cl)) <= freq_limit)
+    x_lo = min(np.real(poles_cl[mask_im_cl]).min() * 1.15, -1)
+    x_hi = max(np.real(poles_ol[mask_im_ol]).max() * 0.5,   1)
     ax.set_xlim(x_lo, x_hi)
     y_hi = freq_limit * 1.05
     ax.set_ylim(-y_hi, y_hi)
@@ -695,7 +695,7 @@ def plot_pole_zero(A, B, K_lqr, filename='pole_zero.png'):
     ax.axhline(0, color='gray', linewidth=0.5, linestyle=':')
     ax.set_xlabel('Real Part (rad/s)')
     ax.set_ylabel('Imaginary Part (rad/s)')
-    ax.set_title('Pole Map — Full Spectrum (all 40 poles)')
+    ax.set_title(f'Pole Map — Full Spectrum (all {len(poles_ol)} poles)')
     ax.legend()
 
     plt.tight_layout()

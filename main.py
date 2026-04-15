@@ -39,7 +39,7 @@ def main():
     E = 210e9        # Young's modulus (Pa)
     rho = 7850       # Density (kg/m^3)
     b = 0.03         # Width (m)
-    h = 0.005        # Height (m)
+    h = 0.004        # Height (m) — reduced from 0.005 m for a more flexible beam
     n_elements = 10  # Number of elements
 
     print(f"Length:           L = {L} m")
@@ -101,8 +101,8 @@ def main():
     print("STEP 5: STATE-SPACE CONVERSION")
     print("="*60)
 
-    zeta1 = 0.01  # 1% damping on first mode
-    zeta2 = 0.01  # 1% damping on second mode
+    zeta1 = 0.005  # 0.5% damping on first mode — lightly damped steel
+    zeta2 = 0.005  # 0.5% damping on second mode
 
     ss = StateSpace(fem, zeta1, zeta2)
     A, B, C, D = ss.get_matrices()
@@ -180,7 +180,7 @@ def main():
     print("STEP 10: SIMULATE VIBRATION CONTROL")
     print("="*60)
 
-    T_sim = 2.0  # Simulation time (s)
+    T_sim = 5.0  # Simulation time (s) — extended to observe long free-vibration settling
     dt_eval = 0.001  # Evaluation time step
     t_eval = np.arange(0, T_sim, dt_eval)
 
